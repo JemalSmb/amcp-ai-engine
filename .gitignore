@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+
+# MLflow local tracking and training outputs
+mlruns/
+mlflow.db
+*.db
+
+# Raw/processed dataset contents (folder structure is kept via .gitkeep)
+datasets/**/raw/*
+datasets/**/processed/*
+!datasets/**/.gitkeep
+ai/datasets/**/raw/*
+ai/datasets/**/processed/*
+!ai/datasets/**/.gitkeep
+
+.DS_Store
