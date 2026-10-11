@@ -1,0 +1,37 @@
+# Run alongside amcp-platform-core's docker-compose.core.yaml, which
+# creates the platform-network this joins.
+#
+# Versioned launches:
+#   MODEL_VERSION=1.2.0 docker compose -f docker-compose.inference.yaml up -d --build
+# tags the built image `amcp-inference:1.2.0` and bakes that same value into
+# the container as MODEL_VERSION (surfaced on GET /health -> details._image_version).
+# Omit it and both default to "dev".
+
+services:
+  inference:
+    build:
+      context: ..
+      dockerfile: inference/Dockerfile
+      args:
+        MODEL_VERSION: ${MODEL_VERSION:-dev}
+    image: amcp-inference:${MODEL_VERSION:-dev}
+    container_name: platform-inference
+    environment:
+      - MODEL_VERSION=${MODEL_VERSION:-dev}
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
+      - SUPABASE_MODELS_BUCKET=${SUPABASE_MODELS_BUCKET:-models}
+    ports:
+      # Localhost only -- gateway/domain services reach it over the docker
+      # network at http://inference:8000, not through this host port.
+      - "127.0.0.1:8000:8000"
+    networks:
+      - platform-network
+    restart: unless-stopped
+
+# NOTE: platform-network is declared (non-external) by the root
+# /docker-compose.yml, which pulls this file in via `include:`. Do not
+# redeclare it here with `external: true` — Compose's file-merging would
+# otherwise conflict with the root's definition of the same network name.
+networks:
+  platform-network: {}

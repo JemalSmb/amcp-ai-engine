@@ -1,0 +1,13 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+joblib==1.4.2
+numpy==2.2.6
+scikit-learn==1.7.2
+psutil==7.2.2
+PyYAML==6.0.2
+mlflow==3.11.1
+pandas==2.3.3
+nats-py==2.9.0
+requests==2.32.3
+python-dotenv==1.0.1
