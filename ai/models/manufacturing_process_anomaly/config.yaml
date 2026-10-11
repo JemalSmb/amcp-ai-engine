@@ -1,0 +1,40 @@
+# Manufacturing — Process Anomaly Detector Configuration
+model:
+  name: process_anomaly_detector
+  version: "1.0.0"
+  description: Autoencoder anomaly detection on machine process parameters
+  base_type: ANOMALY_DETECTOR
+  domain: manufacturing
+
+architecture:
+  type: autoencoder
+  input_dim: 14
+  latent_dim: 4
+
+input:
+  type: numeric
+  shape: [1, 14]
+  features:
+    - vibration_rms
+    - temperature_c
+    - current_a
+    - pressure_bar
+    - rpm
+    - efficiency_pct
+    - oil_temperature
+    - coolant_flow
+    - acoustic_db
+    - power_kw
+    - torque_nm
+    - cycle_time_s
+    - feed_rate
+    - tool_wear_pct
+
+training:
+  batch_size: 64
+  epochs: 20
+  learning_rate: 0.001
+
+export:
+  format: onnx
+  opset_version: 17

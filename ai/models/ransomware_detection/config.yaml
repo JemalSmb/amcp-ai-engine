@@ -1,0 +1,83 @@
+# Ransomware Behavior Detector Configuration
+
+
+model:
+  name: ransomware_detector
+  version: "1.0.0"
+  description: BiLSTM sequence classifier for ransomware file access patterns
+  base_type: BEHAVIOR_ANALYZER
+  domain: cybersecurity
+
+architecture:
+  type: bilstm_attention
+  input_dim: 32         # features per timestep (file ops, entropy, etc.)
+  hidden_dim: 192
+  num_layers: 3
+  num_classes: 2         # benign vs ransomware
+  seq_length: 64         # 64-event windows
+  dropout: 0.2
+
+input:
+  type: sequence
+  shape: [1, 64, 32]    # (batch, seq_len, features)
+  normalization: standard
+  features:
+    # File operation features
+    - op_type              # read/write/rename/delete/create
+    - file_extension_id
+    - file_size_bytes
+    - bytes_written
+    - bytes_read
+    - entropy_before
+    - entropy_after
+    - entropy_delta
+    # Timing features
+    - time_since_last_op
+    - ops_per_second
+    - burst_count
+    # Path features
+    - path_depth
+    - is_system_dir
+    - is_user_dir
+    - is_temp_dir
+    # Process features
+    - process_id_hash
+    - parent_process_hash
+    - thread_count
+    - cpu_usage
+    - memory_usage
+    # Behavioral flags
+    - sequential_access
+    - random_access
+    - overwrites_existing
+    - deletes_after_write
+    - creates_new_extension
+    - accesses_shadow_copy
+    - modifies_registry
+    - network_activity
+    # Aggregate window stats
+    - unique_extensions_touched
+    - unique_dirs_touched
+    - total_files_modified
+    - avg_entropy_delta
+
+training:
+  batch_size: 64
+  epochs: 100
+  learning_rate: 0.0008
+  weight_decay: 0.01
+  early_stopping_patience: 12
+  synthetic_samples: 10000
+
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_score
+    - auc_roc
+
+export:
+  format: onnx
+  opset_version: 17
+  optimize: true

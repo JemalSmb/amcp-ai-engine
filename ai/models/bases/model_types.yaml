@@ -1,0 +1,150 @@
+# Core AI Model Types — Cross-Domain Registry
+
+# These 10 foundational AI architectures are domain-agnostic.
+# Each gets specialized through domain-specific training data.
+# Any domain (cybersecurity, finance, manufacturing, agriculture, etc.) composes
+# 2-3 of these types per microservice.
+
+version: "1.0.0"
+
+model_types:
+
+  # 1. Unsupervised Learning
+  ANOMALY_DETECTOR:
+    category: "Unsupervised Learning"
+    architectures:
+      - Autoencoder
+      - IsolationForest
+      - OneClassSVM
+    purpose: "Detect deviations from normal behavior"
+    base_class: "AnomalyDetectorBase"
+    default_params:
+      input_dim: 128
+      latent_dim: 32
+
+  # 2. Sequential Pattern Recognition
+  BEHAVIOR_ANALYZER:
+    category: "Sequential Pattern Recognition"
+    architectures:
+      - LSTM
+      - GRU
+      - Transformer_TimeSeries
+    purpose: "Analyze sequences and temporal patterns"
+    base_class: "BehaviorAnalyzerBase"
+    default_params:
+      input_dim: 64
+      hidden_dim: 128
+      num_layers: 2
+
+  # 3. Supervised Learning
+  THREAT_CLASSIFIER:
+    category: "Supervised Learning"
+    architectures:
+      - MLP
+      - CNN
+      - RandomForest
+      - XGBoost
+    purpose: "Categorize and label threats/events"
+    base_class: "ThreatClassifierBase"
+    default_params:
+      input_dim: 128
+      num_classes: 10
+      hidden_dims: [256, 128]
+
+  # 4. Time Series Prediction
+  FORECASTER:
+    category: "Time Series Prediction"
+    architectures:
+      - Transformer
+      - LSTM
+      - Prophet
+      - ARIMA
+    purpose: "Predict future states and events"
+    base_class: "ForecasterBase"
+    default_params:
+      input_dim: 32
+      d_model: 128
+      nhead: 8
+      num_layers: 4
+
+  # 5. Graph Neural Networks
+  CORRELATOR:
+    category: "Graph Neural Networks"
+    architectures:
+      - GNN
+      - GraphAttentionNetwork
+    purpose: "Find relationships between entities/events"
+    base_class: "CorrelatorBase"
+    default_params:
+      node_features: 64
+      hidden_dim: 64
+      num_layers: 2
+
+  # 6. NLP / Computer Vision
+  CONTENT_ANALYZER:
+    category: "NLP / Computer Vision"
+    architectures:
+      - Transformer_NLP
+      - BERT
+      - ResNet
+      - YOLO
+    purpose: "Analyze text, images, code, URLs"
+    base_class: "ContentAnalyzerBase"
+    default_params:
+      vocab_size: 30000
+      embed_dim: 256
+      num_classes: 2
+
+  # 7. Reinforcement Learning
+  RL_AGENT:
+    category: "Reinforcement Learning"
+    architectures:
+      - DQN
+      - PPO
+      - A3C
+    purpose: "Automated response and adaptive behavior"
+    base_class: "RLAgentBase"
+    default_params:
+      state_dim: 64
+      action_dim: 12
+      hidden_dim: 256
+
+  # 8. Generative Models
+  GENERATOR:
+    category: "Generative Models"
+    architectures:
+      - GAN
+      - VAE
+      - DiffusionModel
+    purpose: "Generate synthetic data, simulate scenarios"
+    base_class: "GeneratorBase"
+    default_params:
+      latent_dim: 100
+      output_dim: 128
+
+  # 9. Collaborative Filtering
+  RECOMMENDER:
+    category: "Collaborative Filtering"
+    architectures:
+      - MatrixFactorization
+      - NeuralCF
+    purpose: "Suggest actions, configurations, policies"
+    base_class: "RecommenderBase"
+    default_params:
+      num_entities: 1000
+      num_actions: 50
+      embed_dim: 64
+
+  # 10. Interpretability
+  EXPLAINER:
+    category: "Interpretability"
+    architectures:
+      - LIME
+      - SHAP
+      - AttentionMechanism
+    purpose: "Explain model decisions for transparency"
+    base_class: "ExplainerBase"
+    default_params:
+      input_dim: 128
+      hidden_dim: 128
+      num_heads: 4

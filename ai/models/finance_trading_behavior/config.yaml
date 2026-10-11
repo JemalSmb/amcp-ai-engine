@@ -1,0 +1,67 @@
+# Finance — Trading Behavior Analyzer Configuration
+
+
+model:
+  name: trading_behavior_analyzer
+  version: "1.0.0"
+  description: BiLSTM sequence classifier for suspicious trading patterns
+  base_type: BEHAVIOR_ANALYZER
+  domain: finance
+
+architecture:
+  type: bilstm_attention
+  input_dim: 16          # features per timestep
+  hidden_dim: 32
+  num_layers: 1
+  num_classes: 2          # normal vs suspicious
+  seq_length: 30          # 30-tick observation window
+  dropout: 0.2
+
+input:
+  type: sequence
+  shape: [1, 30, 16]     # (batch, seq_len, features)
+  normalization: standard
+  features:
+    # Price features
+    - price
+    - price_change
+    - price_change_pct
+    # Volume features
+    - volume
+    - volume_imbalance
+    - order_flow
+    # Spread features
+    - bid_ask_spread
+    - mid_price
+    # Order book features
+    - bid_depth
+    - ask_depth
+    - depth_imbalance
+    # Timing features
+    - inter_trade_time
+    - time_to_close
+    # Behavioral
+    - cancel_rate
+    - order_to_trade_ratio
+    - layering_score
+
+training:
+  batch_size: 64
+  epochs: 25
+  learning_rate: 0.001
+  weight_decay: 0.01
+  early_stopping_patience: 6
+  synthetic_samples: 4000
+
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_score
+    - auc_roc
+
+export:
+  format: onnx
+  opset_version: 17
+  optimize: true

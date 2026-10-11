@@ -1,0 +1,67 @@
+# Threat Detection Model Configuration
+
+
+model:
+  name: threat_classifier
+  version: "1.0.0"
+  description: Multi-class network threat classification (background / normal / botnet)
+  base_type: THREAT_CLASSIFIER
+  domain: cybersecurity
+
+architecture:
+  type: random_forest
+
+  params:
+    n_estimators: 300
+    max_depth: 30
+    min_samples_split: 3
+    min_samples_leaf: 2
+    max_features: "sqrt"
+    class_weight: "balanced"
+    random_state: 42
+    n_jobs: -1
+
+  output:
+    num_classes: 3
+    classes:
+      - background
+      - normal
+      - botnet
+
+input:
+  type: numeric
+  shape: [1, 15]
+  normalization: standard
+  features:
+    - Dur
+    - Proto_enc
+    - Dir_enc
+    - State_enc
+    - Sport_enc
+    - Dport_enc
+    - sTos
+    - dTos
+    - TotPkts
+    - TotBytes
+    - SrcBytes
+    - bytes_per_pkt
+    - src_byte_ratio
+    - pkts_per_sec
+    - bytes_per_sec
+
+training:
+  test_size: 0.2
+  random_state: 42
+
+evaluation:
+  metrics:
+    - accuracy
+    - precision_macro
+    - recall_macro
+    - f1_macro
+    - confusion_matrix
+
+export:
+  format: onnx
+  opset_version: 17
+  optimize: true

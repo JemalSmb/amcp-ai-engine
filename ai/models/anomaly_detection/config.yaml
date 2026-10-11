@@ -1,0 +1,62 @@
+# Anomaly Detector Model Configuration
+
+
+model:
+  name: anomaly_detector
+  version: "1.0.0"
+  description: Unsupervised anomaly detection for IoT/network traffic
+
+architecture:
+  type: isolation_forest
+
+  params:
+    n_estimators: 500
+    max_samples: 0.9
+    contamination: 0.05
+    max_features: 0.8
+    random_state: 42
+
+  output:
+    type: anomaly_score
+    threshold: 0.5
+
+input:
+  type: numeric
+  shape: [1, 45]
+  normalization: standard
+  features:
+    - flow_duration
+    - total_fwd_packets
+    - total_bwd_packets
+    - flow_bytes_per_s
+    - flow_packets_per_s
+    - fwd_packet_length_mean
+    - bwd_packet_length_mean
+    - fwd_iat_mean
+    - bwd_iat_mean
+    - active_mean
+    - idle_mean
+
+training:
+  test_size: 0.2
+  random_state: 42
+  use_only_benign: true
+
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_score
+    - auc_roc
+    - confusion_matrix
+
+  thresholds:
+    default: 0.5
+    high_precision: 0.7
+    high_recall: 0.3
+
+export:
+  format: onnx
+  opset_version: 17
+  optimize: true

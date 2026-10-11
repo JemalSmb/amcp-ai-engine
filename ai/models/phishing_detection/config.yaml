@@ -1,0 +1,88 @@
+# Phishing Classifier Model Configuration
+
+model:
+  name: phishing_classifier
+  version: "1.0.0"
+  description: Binary classification for phishing URL/email detection
+
+architecture:
+  type: random_forest
+
+  params:
+    n_estimators: 500
+    max_depth: 30
+    min_samples_split: 3
+    min_samples_leaf: 2
+    max_features: "sqrt"
+    class_weight: "balanced"
+    random_state: 42
+    n_jobs: -1
+
+  output:
+    num_classes: 2
+    classes:
+      - legitimate
+      - phishing
+
+input:
+  type: numeric
+  shape: [1, 30]
+  normalization: standard
+  features:
+    # URL-based features
+    - url_length
+    - hostname_length
+    - path_length
+    - num_dots
+    - num_hyphens
+    - num_underscores
+    - num_slashes
+    - num_query_params
+    - num_fragments
+    - num_digits_in_url
+    - has_ip_address
+    - has_at_symbol
+    - has_double_slash_redirect
+    - has_https
+    - shortened_url
+    # Domain-based features
+    - domain_age_days
+    - domain_registration_length
+    - abnormal_subdomain
+    - num_subdomains
+    - suspicious_tld
+    # Content-based features
+    - has_form_tag
+    - has_iframe
+    - has_submit_button
+    - num_external_links
+    - num_internal_links
+    - external_link_ratio
+    - has_popup_window
+    - has_right_click_disabled
+    # Statistical features
+    - url_entropy
+    - char_repetition_rate
+
+training:
+  test_size: 0.2
+  random_state: 42
+
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_score
+    - auc_roc
+    - confusion_matrix
+
+  thresholds:
+    default: 0.5
+    high_precision: 0.8
+    high_recall: 0.3
+
+export:
+  format: onnx
+  opset_version: 17
+  optimize: true

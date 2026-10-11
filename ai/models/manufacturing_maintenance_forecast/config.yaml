@@ -1,0 +1,40 @@
+# Manufacturing — Predictive Maintenance Forecaster Configuration
+model:
+  name: maintenance_forecaster
+  version: "1.0.0"
+  description: Transformer forecaster for equipment degradation prediction
+  base_type: FORECASTER
+  domain: manufacturing
+
+architecture:
+  type: transformer_forecaster
+  input_dim: 8
+  d_model: 32
+  nhead: 2
+  num_layers: 1
+  seq_length: 30           # 30 measurement cycles lookback
+  forecast_horizon: 5      # predict next 5 cycles
+
+input:
+  type: sequence
+  shape: [1, 30, 8]
+  features:
+    - vibration_rms
+    - temperature_c
+    - current_a
+    - pressure_bar
+    - rpm
+    - efficiency_pct
+    - operating_hours
+    - cycle_count
+
+training:
+  batch_size: 32
+  epochs: 25
+  learning_rate: 0.0005
+  early_stopping_patience: 7
+  synthetic_samples: 3000
+
+export:
+  format: onnx
+  opset_version: 17
