@@ -213,3 +213,49 @@ def test_score_with_decision_function_is_sigmoid():
 
 def test_score_with_plain_predict():
     assert ModelRegistry._score_with_estimator(_P(), np.zeros((1, 1))) == 1.0
+
+
+# --- Isolation Forest scoring ------------------------------------------------
+def _iforest_artifact(path, calibrated=True):
+    from sklearn.ensemble import IsolationForest
+
+    rng = np.random.default_rng(0)
+    X = rng.normal(0, 1, size=(500, 2))
+    forest = IsolationForest(n_estimators=50, random_state=0).fit(X)
+    raw = forest.decision_function(X)
+    payload = {"model": forest, "scaler": None, "threshold": 0.6}
+    if calibrated:
+        payload.update(score_min=float(raw.min()), score_max=float(raw.max()))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(payload, path)
+
+
+def test_isolation_forest_scores_outliers_higher_than_inliers(isolated, tmp_path):
+    _iforest_artifact(tmp_path / "models" / "anomaly_detection" / "artifacts" / "a.joblib")
+    base = _base()
+    m = isolated._try_load_from_file("anomaly_detection", "artifacts/a.joblib", base)
+    assert m.trained and m.threshold == 0.6 and m.score_range is not None
+    isolated._models["anomaly_detection"] = m
+    inlier = isolated.predict("anomaly_detection", {"a": 0.0, "b": 0.0})
+    outlier = isolated.predict("anomaly_detection", {"a": 8.0, "b": 8.0})
+    assert 0.0 <= inlier["score"] <= 1.0 and 0.0 <= outlier["score"] <= 1.0
+    assert outlier["score"] > inlier["score"]
+    assert outlier["label"] == "anomalous" and inlier["label"] == "normal"
+
+
+def test_isolation_forest_without_calibration_is_not_inverted(isolated, tmp_path):
+    _iforest_artifact(tmp_path / "models" / "anomaly_detection" / "artifacts" / "a.joblib", calibrated=False)
+    m = isolated._try_load_from_file("anomaly_detection", "artifacts/a.joblib", _base())
+    assert m.trained and m.score_range is None
+    isolated._models["anomaly_detection"] = m
+    inlier = isolated.predict("anomaly_detection", {"a": 0.0, "b": 0.0})["score"]
+    outlier = isolated.predict("anomaly_detection", {"a": 8.0, "b": 8.0})["score"]
+    assert outlier > inlier
+
+
+def test_artifact_threshold_decides_the_label(isolated, tmp_path):
+    _iforest_artifact(tmp_path / "models" / "anomaly_detection" / "artifacts" / "a.joblib")
+    m = isolated._try_load_from_file("anomaly_detection", "artifacts/a.joblib", _base())
+    m.threshold = 0.0  # everything at or above 0 is flagged
+    isolated._models["anomaly_detection"] = m
+    assert isolated.predict("anomaly_detection", {"a": 0.0, "b": 0.0})["label"] == "anomalous"
