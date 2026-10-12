@@ -180,6 +180,10 @@ def evaluate(
         "false_positives": int(cm[0][1]),
         "false_negatives": int(cm[1][0]),
         "true_positives": int(cm[1][1]),
+        # Raw decision_function range used for the min-max normalisation above;
+        # stored with the artifact so serving can reproduce the same scale.
+        "score_min": float(raw_scores.min()),
+        "score_max": float(raw_scores.max()),
     }
 
 
@@ -301,7 +305,16 @@ def main():
 
         # Save sklearn model
         joblib_path = output_dir / "anomaly_detector.joblib"
-        joblib.dump({"model": model, "scaler": scaler, "threshold": best_threshold}, joblib_path)
+        joblib.dump(
+            {
+                "model": model,
+                "scaler": scaler,
+                "threshold": best_threshold,
+                "score_min": final_metrics["score_min"],
+                "score_max": final_metrics["score_max"],
+            },
+            joblib_path,
+        )
         mlflow.log_artifact(joblib_path)
 
         # Export to ONNX

@@ -131,6 +131,10 @@ def evaluate(model, scaler, X_test, y_test) -> Dict[str, float]:
         "f1": float(f1),
         "auc_roc": float(auc),
         "threshold": float(best_th),
+        # Raw decision_function range used for the min-max normalisation above;
+        # stored with the artifact so serving can reproduce the same scale.
+        "score_min": float(raw_scores.min()),
+        "score_max": float(raw_scores.max()),
     }
 
 
@@ -177,7 +181,16 @@ def main():
         output_dir.mkdir(parents=True, exist_ok=True)
 
         joblib_path = output_dir / "fraud_detector.joblib"
-        joblib.dump({"model": model, "scaler": scaler, "threshold": metrics["threshold"]}, joblib_path)
+        joblib.dump(
+            {
+                "model": model,
+                "scaler": scaler,
+                "threshold": metrics["threshold"],
+                "score_min": metrics["score_min"],
+                "score_max": metrics["score_max"],
+            },
+            joblib_path,
+        )
         mlflow.log_artifact(str(joblib_path))
 
         # ONNX
