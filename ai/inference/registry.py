@@ -218,7 +218,7 @@ class ModelRegistry:
                 logger.warning("could not fetch '%s' from Supabase Storage: %s", model_id, exc)
                 return None
 
-        return self._try_load_from_file(model_id, str(cache_path.relative_to(MODEL_CACHE_DIR / model_id)), base, base_dir=cache_path.parent)
+        return self._try_load_from_file(model_id, artifact_rel, base, base_dir=MODEL_CACHE_DIR / model_id)
 
     def _try_load_from_file(
         self, model_id: str, artifact_rel: str, base: LoadedModel, base_dir: Optional[Path] = None
