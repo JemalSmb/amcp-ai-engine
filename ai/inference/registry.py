@@ -31,7 +31,10 @@ load_dotenv()  # picks up inference/.env when running outside Docker
 logger = logging.getLogger(__name__)
 
 AI_ROOT = Path(__file__).resolve().parent.parent
-MODELS_ROOT = AI_ROOT / "models"
+# In the Docker image the service lives in /app and the model configs are copied
+# to /app/models (see Dockerfile), so AI_ROOT would wrongly resolve to "/".
+_LOCAL_MODELS = Path(__file__).resolve().parent / "models"
+MODELS_ROOT = Path(os.environ["MODELS_ROOT"]) if os.environ.get("MODELS_ROOT") else (_LOCAL_MODELS if _LOCAL_MODELS.is_dir() else AI_ROOT / "models")
 TRAINING_ROOT = AI_ROOT / "training"
 
 # Registered models' pyfunc wrappers were pickled as `utils.ScaledClassifier`
@@ -55,13 +58,19 @@ MODEL_CACHE_DIR = Path(os.environ.get("MODEL_CACHE_DIR", "/tmp/amcp-model-cache"
 # optional MLflow registered-model name (preferred source), and/or a
 # static local artifact file (fallback).
 SUPPORTED_MODELS: Dict[str, Dict[str, str]] = {
-    "anomaly_detection": {"domain": "cybersecurity"},
+    "anomaly_detection": {
+        "domain": "cybersecurity",
+        "artifact": "artifacts/anomaly_detector.joblib",
+    },
     "phishing_detection": {
         "domain": "cybersecurity",
         "registered_name": "phishing_classifier",
         "artifact": "artifacts/phishing_classifier.joblib",
     },
-    "finance_fraud_anomaly": {"domain": "finance"},
+    "finance_fraud_anomaly": {
+        "domain": "finance",
+        "artifact": "artifacts/fraud_detector.joblib",
+    },
     "manufacturing_process_anomaly": {"domain": "manufacturing"},
 }
 
@@ -87,6 +96,10 @@ class LoadedModel:
     scaler: Optional[Any] = field(default=None, repr=False)
     pyfunc_model: Optional[Any] = field(default=None, repr=False)
     load_error: Optional[str] = None
+    # Decision threshold on the 0-1 score, and the raw decision_function range used
+    # to normalise anomaly detectors; both are saved by the training pipelines.
+    threshold: Optional[float] = None
+    score_range: Optional[tuple] = None
 
 
 def _deterministic_score(model_id: str, features: Dict[str, float]) -> float:
@@ -248,6 +261,12 @@ class ModelRegistry:
             logger.warning("'%s': %s", model_id, base.load_error)
             return None
 
+        if isinstance(loaded, dict):
+            if loaded.get("threshold") is not None:
+                base.threshold = float(loaded["threshold"])
+            if loaded.get("score_min") is not None and loaded.get("score_max") is not None:
+                base.score_range = (float(loaded["score_min"]), float(loaded["score_max"]))
+
         base.trained = True
         base.source = "local_file"
         base.estimator = estimator
@@ -297,7 +316,7 @@ class ModelRegistry:
             vector = self._vectorize(model, features, warnings)
             if model.scaler is not None:
                 vector = model.scaler.transform(vector)
-            score = self._score_with_estimator(model.estimator, vector)
+            score = self._score_with_estimator(model.estimator, vector, model.score_range)
         else:
             if model.load_error:
                 warnings.append(f"using mock scoring: {model.load_error}")
@@ -305,7 +324,8 @@ class ModelRegistry:
                 warnings.append("using mock scoring: model not yet trained")
             score = _deterministic_score(model_id, features)
 
-        label = positive_label if score >= 0.5 else normal_label
+        threshold = model.threshold if model.threshold is not None else 0.5
+        label = positive_label if score >= threshold else normal_label
         return {"score": score, "label": label, "warnings": warnings}
 
     @staticmethod
@@ -326,13 +346,24 @@ class ModelRegistry:
         return float(np.asarray(result).reshape(-1)[0])
 
     @staticmethod
-    def _score_with_estimator(estimator: Any, vector: np.ndarray) -> float:
+    def _score_with_estimator(
+        estimator: Any, vector: np.ndarray, score_range: Optional[tuple] = None
+    ) -> float:
         if hasattr(estimator, "predict_proba"):
             proba = estimator.predict_proba(vector)[0]
             # Assume binary classifier with the positive class last.
             return float(proba[-1])
         if hasattr(estimator, "decision_function"):
             raw = float(estimator.decision_function(vector)[0])
+            from sklearn.ensemble import IsolationForest
+
+            if isinstance(estimator, IsolationForest):
+                # Higher decision_function means MORE normal for an Isolation Forest,
+                # so the anomaly score is the inverted, normalised value.
+                if score_range is not None:
+                    lo, hi = score_range
+                    return float(np.clip(1 - (raw - lo) / (hi - lo + 1e-10), 0.0, 1.0))
+                return float(1 / (1 + np.exp(raw)))
             return float(1 / (1 + np.exp(-raw)))
         prediction = estimator.predict(vector)[0]
         return float(prediction)
