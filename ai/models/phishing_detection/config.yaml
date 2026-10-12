@@ -26,43 +26,58 @@ architecture:
 
 input:
   type: numeric
-  shape: [1, 30]
+  shape: [1, 48]
   normalization: standard
   features:
-    # URL-based features
-    - url_length
-    - hostname_length
-    - path_length
-    - num_dots
-    - num_hyphens
-    - num_underscores
-    - num_slashes
-    - num_query_params
-    - num_fragments
-    - num_digits_in_url
-    - has_ip_address
-    - has_at_symbol
-    - has_double_slash_redirect
-    - has_https
-    - shortened_url
-    # Domain-based features
-    - domain_age_days
-    - domain_registration_length
-    - abnormal_subdomain
-    - num_subdomains
-    - suspicious_tld
-    # Content-based features
-    - has_form_tag
-    - has_iframe
-    - has_submit_button
-    - num_external_links
-    - num_internal_links
-    - external_link_ratio
-    - has_popup_window
-    - has_right_click_disabled
-    # Statistical features
-    - url_entropy
-    - char_repetition_rate
+    # Column order of Phishing_Legitimate_full.csv (the 48 features the shipped classifier was trained on).
+    - NumDots
+    - SubdomainLevel
+    - PathLevel
+    - UrlLength
+    - NumDash
+    - NumDashInHostname
+    - AtSymbol
+    - TildeSymbol
+    - NumUnderscore
+    - NumPercent
+    - NumQueryComponents
+    - NumAmpersand
+    - NumHash
+    - NumNumericChars
+    - NoHttps
+    - RandomString
+    - IpAddress
+    - DomainInSubdomains
+    - DomainInPaths
+    - HttpsInHostname
+    - HostnameLength
+    - PathLength
+    - QueryLength
+    - DoubleSlashInPath
+    - NumSensitiveWords
+    - EmbeddedBrandName
+    - PctExtHyperlinks
+    - PctExtResourceUrls
+    - ExtFavicon
+    - InsecureForms
+    - RelativeFormAction
+    - ExtFormAction
+    - AbnormalFormAction
+    - PctNullSelfRedirectHyperlinks
+    - FrequentDomainNameMismatch
+    - FakeLinkInStatusBar
+    - RightClickDisabled
+    - PopUpWindow
+    - SubmitInfoToEmail
+    - IframeOrFrame
+    - MissingTitle
+    - ImagesOnlyInForm
+    - SubdomainLevelRT
+    - UrlLengthRT
+    - PctExtResourceUrlsRT
+    - AbnormalExtFormActionR
+    - ExtMetaScriptLinkRT
+    - PctExtNullSelfRedirectHyperlinksRT
 
 training:
   test_size: 0.2

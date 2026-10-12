@@ -16,36 +16,44 @@ architecture:
     max_samples: 0.8
     contamination: 0.05
     max_features: 0.8
-    n_features: 20
+    n_features: 30
 
 input:
   type: numeric
-  shape: [1, 20]
+  shape: [1, 30]
   normalization: standard
   features:
-    # Transaction features
-    - amount
-    - hour_of_day
-    - day_of_week
-    - txn_count_last_hour
-    - txn_count_last_day
-    - avg_amount_last_7d
-    - amount_deviation
-    - is_international
-    - merchant_category
-    - payment_method
-    # User behavior features
-    - days_since_last_txn
-    - device_change
-    - location_distance_km
-    - new_merchant
-    - is_recurring
-    # Risk indicators
-    - velocity_1h
-    - velocity_24h
-    - amount_to_balance_ratio
-    - failed_attempts_24h
-    - account_age_days
+    # Column order of the training data (written by preprocessing).
+    - Time
+    - V1
+    - V2
+    - V3
+    - V4
+    - V5
+    - V6
+    - V7
+    - V8
+    - V9
+    - V10
+    - V11
+    - V12
+    - V13
+    - V14
+    - V15
+    - V16
+    - V17
+    - V18
+    - V19
+    - V20
+    - V21
+    - V22
+    - V23
+    - V24
+    - V25
+    - V26
+    - V27
+    - V28
+    - Amount
 
 training:
   test_size: 0.2
